@@ -1,0 +1,107 @@
+---
+title: "task1_244_hw_1"
+author: "Claire Meuter"
+date: "2023-02-12"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=TRUE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+library(AICcmodavg)
+library(purrr)
+```
+a. An overview section describing the data, the question(s) to be addressed in your analysis, and a citation of the dataset.
+
+This code wrangles, explores and compares two species of Florida Palmetto, *Serenoa repens* and *Sabal etonia*. 
+
+
+#Read in the data 
+```{r}
+palmetto <- read_csv(here("palmetto.csv")) %>% 
+  select(species, height, length, width, green_lvs) %>% #keeping only the columns that I need
+  mutate(species = as.factor(species), species = (fct_drop(species)))
+
+
+# %>% 
+ # mutate(species = case_when(
+ #   species == 1 ~ "serenoa_repens",
+ #   species == 2 ~ "sabal_etonia"))
+  
+
+#Keeping this for notes if i need later
+#palmetto <- read_csv(here("palmetto.csv")) %>% 
+#  mutate(species = case_when(
+ #   species == 1 ~ "serenoa_repens",
+ #   species == 2 ~ "sabal_etonia"), species = as.factor(species)) #making species as.factor for regression 
+  
+```
+b. A section containing 2 - 3 finalized (customized, suitable for a publication) data visualizations (with figure captions) in which you explore differences in height, canopy length, canopy width, and green leaves for the two species. If you prefer, combine the figures into a compound figure using {patchwork} or {cowplot}. Below your data visualizations, add a sentence or two with a takeaway from the plots, e.g., based on these plots, which predictor variables are more likely to help classify species correctly?
+
+```{r}
+width <- ggplot(data = palmetto) + geom_point(aes(x = width, y = height, color = species))
+
+length <- ggplot(data = palmetto) + geom_point(aes(x = length, y = height, color = species))
+ 
+green_lvs <- ggplot(data = palmetto) + geom_point(aes(x = green_lvs, y = height, color = species))
+```
+Figure 1: caption here 
+
+## Takeaway: 
+Takeaway here 
+-what I anticapte will matter for selecting species type 
+
+c. A section in which you perform binary logistic regression to determine the probability of a plant being either Serenoa repens or Sabal etonia based on several predictor variables.  Perform the analysis twice, using cross validation to compare two models:
+
+#binary logistic regression to determine the probability of a plant being either Serenoa repens or Sabal etonia
+
+#Log odds of plant type using plant height, canopy length, canopy width and green leaves as predictor variable.
+```{r}
+#First, I create a formula for model 1 with variables plant height, canopy length, canopy width and green leaves
+f1 <- species ~ height + length + width + green_lvs
+#Next, a formula for model 2 with variables plant height, canopy width and green leaves
+f2 <- species ~ height + width + green_lvs
+
+#Now I can run both of my models: 
+mdl1 <- glm(f1, palmetto, family = "binomial")
+mdl2 <- glm(f2, palmetto, family = "binomial")
+
+#using AIC for initial exploration
+AIC <- aictab(list(mdl1, mdl2),
+              modnames = c("Model 1", "Model 2"))
+#initally, model 1 is looking like the better fit, but now I'll do 10-fold cross validation to confirm 
+
+```
+
+
+
+Make sure you understand which species is the first ‘0’ factor level, and which is ‘1’ - you may want to convert to a factor first, then use the levels() function to check.  Use repeated cross validation (ten-fold cross validation, repeated at least ten times - you can use functions from the {tidymodels} package to automate this, or manually perform the analysis using for-loops or {purrr} functions).  Based on the results of the cross validation, describe which model performs better at classification; you may wish to compare AICC and BIC values as well to support your decision. 
+
+```{r}
+x_vec <-1:10
+thing <- purrr::map()
+```
+
+
+
+x_vec <- 1:10
+
+thing <- purrr::map(.x = x_vec, # a sequence (vector, list)
+                    .f = sqrt)  # name of a function (without parens)
+
+my_funct <- function(x, y, z) {
+  return((x - y) ^ z)
+}
+
+thing2 <- purrr::map(.x = x_vec,      # a sequence (for first arg of function)
+                     .f = my_funct,   # name of a function to apply
+                     y = 2, z = 3)    # additional parameters (for other args)
+
+d. Train your selected model using the entire dataset, and create a finalized table (e.g., knitr::kable() and {kableExtra} functions) containing the binary logistic regression model results (at least coefficients, standard errors for the coefficients, and information for significance - consider using broom::tidy() to get you most of the way). 
+e. A section that evaluates how successfully this model would “classify” a plant as the correct species, using a 50% cutoff (e.g. if the probability is >=50% that it is species A, then it would be classified as species A). Use broom::augment() to find the probabilities (instead of log-odds) for each plant in the original dataset, then add a column for which species your model would classify that plant as (using a 50% cutoff) based on the included predictor variables. The outcome should be a finalized table showing, for each species, how many plants in the original dataset would be correctly classified and how many were incorrectly classified by the model, as well as an additional column with “% correctly classified”. Add a table caption above the table, and a 1-2 sentence conclusion paragraph after.
+To submit Task 1, knit to HTML. Ensure that all messages, warnings are hidden but all attached packages are visible (setup chunk included). Code should be available if we click on the Code button (use code folding in your R Markdown YAML header). Upload your file to GauchoSpace.
+
+
