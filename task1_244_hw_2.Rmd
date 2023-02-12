@@ -12,7 +12,9 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(here)
 library(AICcmodavg)
-library(purrr)
+library(tidymodels)
+library(kableExtra)
+library(modelsummary)
 ```
 a. An overview section describing the data, the question(s) to be addressed in your analysis, and a citation of the dataset.
 
@@ -80,27 +82,115 @@ AIC <- aictab(list(mdl1, mdl2),
 
 Make sure you understand which species is the first ‘0’ factor level, and which is ‘1’ - you may want to convert to a factor first, then use the levels() function to check.  Use repeated cross validation (ten-fold cross validation, repeated at least ten times - you can use functions from the {tidymodels} package to automate this, or manually perform the analysis using for-loops or {purrr} functions).  Based on the results of the cross validation, describe which model performs better at classification; you may wish to compare AICC and BIC values as well to support your decision. 
 
+
+## Tidymodels crossfold validation
+
 ```{r}
-x_vec <-1:10
-thing <- purrr::map()
+
+set.seed(444) ##setting seed for reproducibility purposes 
+
+
+### use a workflow that bundles the logistic model and a formula
+ palmetto_model <- logistic_reg() %>%
+  set_engine('glm')
+ 
+tidy_folds <- vfold_cv(palmetto, v = 10) # I don't actually know what this does and need to figure that out. Think it has something to do with setting number of times to run? 
+
+palm_tidy_wf1 <- workflow() %>%
+  add_model(palmetto_model) %>%
+  add_formula(f1)
+
+palm_tidy_cv_f1 <- palm_tidy_wf1 %>%
+  fit_resamples(tidy_folds)
+
+### use functions from the tune package to extract metrics
+metrics_md1 <- collect_metrics(palm_tidy_cv_f1)
+
+### Repeating tidymodel method for model 2 
+
+palm_tidy_wf2 <- workflow() %>%
+  add_model(palmetto_model) %>%
+  add_formula(f2)
+
+palm_tidy_cv_f2 <- palm_tidy_wf2 %>%
+  fit_resamples(tidy_folds)
+
+### use functions from the tune package to extract metrics
+metrics_md2 <- collect_metrics(palm_tidy_cv_f2)
+
+
+
+metrics_md1 %>% # merge two tables
+  full_join(metrics_md2) %>% 
+  kable(caption = "Caption here") %>% # create table
+  kable_classic()
+### come back and fix: Way to add columns of model 1 nd 2??
+
+## End work flow 
+
+
+
+
+```
+
+## Area under the curve!
+from lab: 
+"Receiver Operating Characteristic Curve (ROC Curve) compares the diagnostic ability of a binary classifier (like logistic regression) based on the discrimination threshold.  Up to now (and for homework) we've been using a 50% threshold by default.  The ROC can tell us tradeoffs between true positive rate and false positive rate as we change the threshold, and also can give a great indication of model quality." 
+
+It seems like model 1 is far better than model 2 in this instance.
+
+
+
+d. Train your selected model using the entire dataset, and create a finalized table (e.g., knitr::kable() and {kableExtra} functions) containing the binary logistic regression model results (at least coefficients, standard errors for the coefficients, and information for significance - consider using broom::tidy() to get you most of the way). 
+
+```{r}
+mdl1 <- glm(f1, palmetto, family = "binomial") #training model on all the data
+
+modelsummary(mdl1, statistic = "std.error") %>% 
+  kable_classic()
 ```
 
 
 
-x_vec <- 1:10
 
-thing <- purrr::map(.x = x_vec, # a sequence (vector, list)
-                    .f = sqrt)  # name of a function (without parens)
+```{r}
+### This is copied from above, for reference
+# blr_model <- logistic_reg() %>% ### also linear_reg, rand_forest, etc
+#   set_engine('glm')
+# 
+# ### basic regression
+# blr_tidyfit_f1 <- blr_model %>%
+#   fit(f1, data = adelie_chinstrap)
+# blr_tidyfit_f2 <- blr_model %>%
+#   fit(f2, data = adelie_chinstrap)
 
-my_funct <- function(x, y, z) {
-  return((x - y) ^ z)
-}
+blr_f1_pred <- adelie_chinstrap %>%
+  mutate(predict(blr_tidyfit_f1, .),
+         predict(blr_tidyfit_f1, ., type = 'prob'))
 
-thing2 <- purrr::map(.x = x_vec,      # a sequence (for first arg of function)
-                     .f = my_funct,   # name of a function to apply
-                     y = 2, z = 3)    # additional parameters (for other args)
+blr_f1_pred %>%
+  roc_curve(truth = species, .pred_Adelie) %>%
+  autoplot()
 
-d. Train your selected model using the entire dataset, and create a finalized table (e.g., knitr::kable() and {kableExtra} functions) containing the binary logistic regression model results (at least coefficients, standard errors for the coefficients, and information for significance - consider using broom::tidy() to get you most of the way). 
+blr_f1_pred %>%
+  roc_auc(truth = species, .pred_Adelie)
+
+### Students repeat for blr_tidyfit_f2 and compare!
+blr_f2_pred <- adelie_chinstrap %>%
+  mutate(predict(blr_tidyfit_f2, .),
+         predict(blr_tidyfit_f2, ., type = 'prob'))
+
+blr_f2_pred %>%
+  roc_curve(truth = species, .pred_Adelie) %>%
+  autoplot()
+
+blr_f2_pred %>%
+  roc_auc(truth = species, .pred_Adelie)
+
+```
+
+
+
 e. A section that evaluates how successfully this model would “classify” a plant as the correct species, using a 50% cutoff (e.g. if the probability is >=50% that it is species A, then it would be classified as species A). Use broom::augment() to find the probabilities (instead of log-odds) for each plant in the original dataset, then add a column for which species your model would classify that plant as (using a 50% cutoff) based on the included predictor variables. The outcome should be a finalized table showing, for each species, how many plants in the original dataset would be correctly classified and how many were incorrectly classified by the model, as well as an additional column with “% correctly classified”. Add a table caption above the table, and a 1-2 sentence conclusion paragraph after.
 To submit Task 1, knit to HTML. Ensure that all messages, warnings are hidden but all attached packages are visible (setup chunk included). Code should be available if we click on the Code button (use code folding in your R Markdown YAML header). Upload your file to GauchoSpace.
 
