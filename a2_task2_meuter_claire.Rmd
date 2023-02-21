@@ -1,14 +1,19 @@
 ---
-title: "task2_244_hw_2"
+title: "Task 2: Lizard Length to Weight NLS"
 author: "Claire Meuter"
 date: "2023-02-12"
-output: html_document
+output: html_document:
+   code_folding: hide
 ---
 
 ```{r setup, include=TRUE, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(tidyverse)
+library(broom)
 library(here)
+library(Metrics)
+library(kableExtra)
+
 ```
 ## Description of dataset 
 
@@ -16,18 +21,162 @@ library(here)
 
 ## Citation of the dataset 
 
-#read in the data 
+
 ```{r}
+#read in the data
 lizards <- read_csv(here("lizards.csv"))
 ```
 
-1. Fit a snout length to weight model of the following form to all lizards in your dataframe.
+
+
+### 1. Select model
+Fit a snout length to weight model of the following form to all lizards in your dataframe.
 \begin{equation}
 W=a(SVL)^b
 \end{equation}
 
-a. Weight is given by W, snout to vent length by SVL, and a and b are the parameters that need to be fitted. Which strategy would be best to provide an initial guess? We could go with strategy one and look through the literature, but let’s practice our coding and math skills.
-b. Since we know the model is exponential in nature, we could log transform the data. If we do a standard OLS regression on the log transformed data, we can get approximations of the parameters from the regression coefficients
-my_guess_model <- lm(log_weight ~ log_length, data = my_df) 
-c. Using the coefficients function, we can then supply the NLS start list with the regression coefficients. Hint: Because you log transformed the data, you will have to mathematically transform the intercept coefficient to get the guess for parameter a.
+Let's create a function in R that represents this equation
+```{r}
+liz_func <- function(a, b, svl){
+  weight <- a*(svl^b)
+  return(weight)
+}
+```
 
+### 1a. Making an intial guess
+a. Weight is given by W, snout to vent length by SVL, and a and b are the parameters that need to be fitted. Which strategy would be best to provide an initial guess? We could go with strategy one and look through the literature, but let’s practice our coding and math skills.
+```{r}
+# OLS regression on log-transformed model
+# Since we know the model is exponential in nature, we could log transform the data. If we do a standard OLS regression on the log transformed data, we can get approximations of the parameters from the regression coefficients
+ 
+guess_model <- lm(log(lizards$weight) ~ log(lizards$SV_length), data = lizards)
+
+
+#c. Using the coefficients function, we can then supply the NLS start list with the regression coefficients. Hint: Because you log transformed the data, you will have to mathematically transform the intercept coefficient to get the guess for parameter a.
+
+#Now I can look at what my coefficients look like for the guess model: 
+#coefficients(guess_model)
+
+#assign guesses for parameters a and b 
+a <- exp((guess_model$coefficients[1]))
+b <- guess_model$coefficients[2]
+```
+
+### 2. Run NLS 
+
+```{r}
+#run nls 
+lizards_nls <- nls(weight ~ liz_func(a, b, SV_length),
+                   data = lizards, 
+                   start = list(a = a, b = b))
+#return results in tidy table 
+lizards_nls_tidy <- tidy(lizards_nls)
+
+lizards_nls_tidy %>% 
+  kable(caption= "Table 1: NLS results",
+        col.names = c("Parameter", 
+                      "Coefficient", 
+                      "Standard Error", 
+                      "Statistic", 
+                      "P-Value")) %>% 
+  kable_styling(full_width = FALSE,
+                bootstrap_options = "striped",
+                position = "left")
+  
+  
+```
+
+Now I can predict weight based off this model, and display the results in plot. 
+```{r}
+#run predictions of weight 
+lizards_pred <- lizards %>% 
+  mutate(predict = predict(lizards_nls, newdata=.))
+
+#plot how well weight prediction matches actual weight 
+ggplot(data = lizards_pred) +
+  #include true weight pts 
+  geom_point(aes(x = SV_length, y = weight, color = sex)) +
+  scale_color_discrete(labels = c("Female", "Male")) +
+  #add our prediction data
+  geom_line(aes(x = SV_length, y = predict),
+            color = "black",
+            size = 1) +
+  labs(x = "Snout to vent length (mm)",
+       y = "Weight (g)") +
+  theme_minimal()
+
+```
+
+**Figure 1.** Snout to vent lengths (mm) and body weights (g) for male and female lizards. Female observations are in red, and male observations in blue. The observation points are overlayed with a line representing the fit of the NLS predicted model. 
+
+### 3. Filtering for Male Western Whiptail lizard (*C. tigrisatus*)
+```{r}
+#creating new data subset from lizards data 
+lizards_c <- lizards %>% 
+  filter(spp == "CNTI", #data code for C. tigrisatus
+         sex == "M")
+
+# now we can recreate what we did above, but only with C. tigrisatus 
+# intial guess model 
+guess_model_c <- lm(log(lizards_c$weight) ~ log(lizards_c$SV_length), data = lizards_c)
+
+#explore my OLS coefficients 
+coefficients(guess_model_c)
+
+#assign guesses for parameters a and b 
+a_c <- exp((guess_model_c$coefficients[1]))
+b_c <- guess_model_c$coefficients[2]
+
+# run NLS 
+lizards_nls_c <- nls(weight ~ liz_func(a, b, SV_length),
+                   data = lizards_c, 
+                   start = list(a = a_c, b = b_c))
+#return results in tidy table 
+lizards_nls_c_tidy <- tidy(lizards_nls_c)
+
+lizards_nls_c_tidy %>% 
+  kable(caption= "Table 1: NLS results",
+        col.names = c("Parameter", 
+                      "Coefficient", 
+                      "Standard Error", 
+                      "Statistic", 
+                      "P-Value")) %>% 
+  kable_styling(full_width = FALSE,
+                bootstrap_options = "striped",
+                position = "left")
+
+```
+```{r}
+#predict the weight based on model
+#run predictions of weight 
+lizards_pred_c <- lizards_c %>% 
+  mutate(predict = predict(lizards_nls_c, newdata=.))
+
+
+#getting RMSE for predictions 
+lizards_rmse <- data.frame(rmse_c = rmse(lizards_pred_c$weight, 
+                                            lizards_pred_c$predict),
+                           rmse_cnti_v_gen = rmse(lizards_pred_c$weight, 
+                                                  lizards_pred$predict),
+                           rmse_gen = rmse(lizards_pred$weight, 
+                                           lizards_pred$predict))
+
+#plot how well weight prediction (species specific and general model)matches actual weight 
+ggplot(data = lizards_pred_c) +
+  #include true weight pts 
+  geom_point(aes(x = SV_length, y = weight), color = "black") +
+  #add our prediction data for species specific model
+  geom_line(aes(x = SV_length, y = predict),
+            color = "darkorange",
+            size = .8)  +
+  #line for general nls model 
+  geom_line(data = lizards_pred,
+            aes(x = SV_length,
+                y = predict),
+            color = "blue") +
+  labs(x = "Snout to vent length (mm)",
+       y = "Weight (g)") +
+  theme_minimal()
+
+```
+**Figure 1.** Snout to vent lengths (mm) and body weights (g) for male *C. tigrisatus*. The orange line displays the fit of the  *C. tigrisatus* species-specific NLS model, which has an RMSE of `r round(lizards_rmse[1],3)` g.The blue line represents the general NLS model for all species of lizards, which has an RMSE of `r round(lizards_rmse[3],3)` g. Because the general model has a lower RMSE, we would want to use that model. 
