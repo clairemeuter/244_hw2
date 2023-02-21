@@ -1,0 +1,33 @@
+---
+title: "task2_244_hw_2"
+author: "Claire Meuter"
+date: "2023-02-12"
+output: html_document
+---
+
+```{r setup, include=TRUE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+```
+## Description of dataset 
+
+## Purpose of analysis 
+
+## Citation of the dataset 
+
+#read in the data 
+```{r}
+lizards <- read_csv(here("lizards.csv"))
+```
+
+1. Fit a snout length to weight model of the following form to all lizards in your dataframe.
+\begin{equation}
+W=a(SVL)^b
+\end{equation}
+
+a. Weight is given by W, snout to vent length by SVL, and a and b are the parameters that need to be fitted. Which strategy would be best to provide an initial guess? We could go with strategy one and look through the literature, but let’s practice our coding and math skills.
+b. Since we know the model is exponential in nature, we could log transform the data. If we do a standard OLS regression on the log transformed data, we can get approximations of the parameters from the regression coefficients
+my_guess_model <- lm(log_weight ~ log_length, data = my_df) 
+c. Using the coefficients function, we can then supply the NLS start list with the regression coefficients. Hint: Because you log transformed the data, you will have to mathematically transform the intercept coefficient to get the guess for parameter a.
+
