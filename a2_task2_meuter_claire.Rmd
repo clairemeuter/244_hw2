@@ -2,7 +2,8 @@
 title: "Task 2: Lizard Length to Weight NLS"
 author: "Claire Meuter"
 date: "2023-02-12"
-output: html_document:
+output: 
+  html_document:
    code_folding: hide
 ---
 
@@ -15,19 +16,15 @@ library(Metrics)
 library(kableExtra)
 
 ```
-## Description of dataset 
-
-## Purpose of analysis 
-
-## Citation of the dataset 
-
 
 ```{r}
 #read in the data
 lizards <- read_csv(here("lizards.csv"))
 ```
 
+This rmd wrangles, explores, and models data from lizard traps in the Jornada Basin LTER site. 
 
+Source: Lightfoot, D. and W.G. Whitford. 2020. Lizard pitfall trap data from 11 NPP study locations at the Jornada Basin LTER site, 1989-2006 ver 37. Environmental Data Initiative. https://doi.org/10.6073/pasta/4a6e258fb49c31e222ecbbcfd128967f
 
 ### 1. Select model
 Fit a snout length to weight model of the following form to all lizards in your dataframe.
@@ -44,7 +41,7 @@ liz_func <- function(a, b, svl){
 ```
 
 ### 1a. Making an intial guess
-a. Weight is given by W, snout to vent length by SVL, and a and b are the parameters that need to be fitted. Which strategy would be best to provide an initial guess? We could go with strategy one and look through the literature, but let’s practice our coding and math skills.
+Weight is given by W, snout to vent length by SVL, and a and b are the parameters that need to be fitted. 
 ```{r}
 # OLS regression on log-transformed model
 # Since we know the model is exponential in nature, we could log transform the data. If we do a standard OLS regression on the log transformed data, we can get approximations of the parameters from the regression coefficients
@@ -63,7 +60,6 @@ b <- guess_model$coefficients[2]
 ```
 
 ### 2. Run NLS 
-
 ```{r}
 #run nls 
 lizards_nls <- nls(weight ~ liz_func(a, b, SV_length),
@@ -107,7 +103,7 @@ ggplot(data = lizards_pred) +
 
 ```
 
-**Figure 1.** Snout to vent lengths (mm) and body weights (g) for male and female lizards. Female observations are in red, and male observations in blue. The observation points are overlayed with a line representing the fit of the NLS predicted model. 
+**Figure 1.** Snout to vent lengths (mm) and body weights (g) for male and female lizards. Female observations are in red, and male observations in blue. The observation points are overlaid with a line representing the fit of the NLS predicted model. 
 
 ### 3. Filtering for Male Western Whiptail lizard (*C. tigrisatus*)
 ```{r}
@@ -179,4 +175,5 @@ ggplot(data = lizards_pred_c) +
   theme_minimal()
 
 ```
-**Figure 1.** Snout to vent lengths (mm) and body weights (g) for male *C. tigrisatus*. The orange line displays the fit of the  *C. tigrisatus* species-specific NLS model, which has an RMSE of `r round(lizards_rmse[1],3)` g.The blue line represents the general NLS model for all species of lizards, which has an RMSE of `r round(lizards_rmse[3],3)` g. Because the general model has a lower RMSE, we would want to use that model. 
+
+**Figure 1.** Snout to vent lengths (mm) and body weights (g) for male *C. tigrisatus*. The orange line displays the fit of the  *C. tigrisatus* species-specific NLS model, which has an RMSE of `r round(lizards_rmse[1],3)` g.The blue line represents the general NLS model for all species of lizards, which has an RMSE of `r round(lizards_rmse[3],3)` g. Because the general model has a lower RMSE, we would want to use that model.

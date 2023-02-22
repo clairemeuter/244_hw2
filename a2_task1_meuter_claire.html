@@ -757,9 +757,9 @@ green_lvs &lt;- ggplot(data = palmetto, aes(x = green_lvs)) +
   theme_minimal() </code></pre>
 <p>Figure 1: Two scatterplots comparing the relationship between canopy
 height and width (left) and canopy height and length (right), between
-two palmetto species, <em>Sabel entonia</em> (red) and <em>Serenoa
-repens</em> (blue). A visual exploration of canopy height and width
-shows little variation between the <em>S. entonia</em> and <em>S.
+two palmetto species, <em>Sabel entonia</em> (dark blue) and <em>Serenoa
+repens</em> (light blue). A visual exploration of canopy height and
+width shows little variation between the <em>S. entonia</em> and <em>S.
 repens</em> species. A visual exploration of canopy height and length
 shows a slight variation between <em>S. entonia</em> and <em>S.
 repens</em> species, with <em>S. entonia</em> showing a slightly longer
@@ -773,17 +773,11 @@ blue. Where the count of green leaves between species overlaps, the
 graph is a combination blue color.</p>
 <div id="takeaway-from-data-exploration" class="section level4">
 <h4>Takeaway from data exploration:</h4>
-<p>Based on Figures 1 and 2, I suspect that number of green leaves and
-canopy length will be the most important in determining if a plant is
-<em>S. etonia</em> or <em>S. repens.</em> Canopy width shows little
+<p>Based on Figures 1 and 2, it seems likely that number of green leaves
+and canopy length will be the most important in determining if a plant
+is <em>S. etonia</em> or <em>S. repens.</em> Canopy width shows little
 variation between the two species, but it could still be a useful model
-parameter, which I will explore in the next section.</p>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>A section in which you perform binary logistic regression to
-determine the probability of a plant being either Serenoa repens or
-Sabal etonia based on several predictor variables. Perform the analysis
-twice, using cross validation to compare two models:</li>
-</ol>
+parameter, which will be explored in the next section.</p>
 </div>
 </div>
 <div id="section-c-comparison-of-two-binary-logistic-regression-models-to-determine-the-probability-of-a-plant-being-either-serenoa-repens-or-sabal-etonia" class="section level3">
@@ -998,19 +992,11 @@ Preprocessor1_Model1
 </tbody>
 </table>
 <pre class="r"><code>## End work flow </code></pre>
-<p>By observing Tables 1 and 2, we can see that model 1 has a higher
-accuracy than model 2.</p>
+<p>Comparing Tables 1 and 2, Model 1 has a higher accuracy than Model
+2.</p>
 </div>
-<div id="producing-our-final-model" class="section level1">
-<h1>Producing our final model</h1>
-<ol start="4" style="list-style-type: lower-alpha">
-<li>Train your selected model using the entire dataset, and create a
-finalized table (e.g., knitr::kable() and {kableExtra} functions)
-containing the binary logistic regression model results (at least
-coefficients, standard errors for the coefficients, and information for
-significance - consider using broom::tidy() to get you most of the
-way).</li>
-</ol>
+<div id="section-d-producing-the-final-model" class="section level3">
+<h3>Section D: Producing the final model</h3>
 <pre class="r"><code>final_mdl &lt;- glm(f1, palmetto, family = &quot;binomial&quot;) #training model on all the data
 
 #output my coefficients, standard errors for the coefficients, and information for significance
@@ -1134,56 +1120,95 @@ green_lvs
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>### This is copied from above, for reference
-# blr_model &lt;- logistic_reg() %&gt;% ### also linear_reg, rand_forest, etc
-#   set_engine(&#39;glm&#39;)
-# 
-# ### basic regression
-# blr_tidyfit_f1 &lt;- blr_model %&gt;%
-#   fit(f1, data = adelie_chinstrap)
-# blr_tidyfit_f2 &lt;- blr_model %&gt;%
-#   fit(f2, data = adelie_chinstrap)
-
-#blr_f1_pred &lt;- adelie_chinstrap %&gt;%
-#  mutate(predict(blr_tidyfit_f1, .),
-#         predict(blr_tidyfit_f1, ., type = &#39;prob&#39;))
-
-#blr_f1_pred %&gt;%
-#  roc_curve(truth = species, .pred_Adelie) %&gt;%
-#  autoplot()
-
-#blr_f1_pred %&gt;%
-#  roc_auc(truth = species, .pred_Adelie)
-
-### Students repeat for blr_tidyfit_f2 and compare!
-#blr_f2_pred &lt;- adelie_chinstrap %&gt;%
- # mutate(predict(blr_tidyfit_f2, .),
-#         predict(blr_tidyfit_f2, ., type = &#39;prob&#39;))
-
-#blr_f2_pred %&gt;%
-#  roc_curve(truth = species, .pred_Adelie) %&gt;%
-#  autoplot()
-
-#blr_f2_pred %&gt;%
-#  roc_auc(truth = species, .pred_Adelie)</code></pre>
-<ol start="5" style="list-style-type: lower-alpha">
-<li>A section that evaluates how successfully this model would
+</div>
+<div id="section-e-testing-accuracy-of-model-1" class="section level3">
+<h3>Section E: Testing Accuracy of Model 1</h3>
+<p>This section that evaluates how successfully this model would
 “classify” a plant as the correct species, using a 50% cutoff (e.g. if
 the probability is &gt;=50% that it is species A, then it would be
-classified as species A). Use broom::augment() to find the probabilities
-(instead of log-odds) for each plant in the original dataset, then add a
-column for which species your model would classify that plant as (using
-a 50% cutoff) based on the included predictor variables. The outcome
-should be a finalized table showing, for each species, how many plants
-in the original dataset would be correctly classified and how many were
-incorrectly classified by the model, as well as an additional column
-with “% correctly classified”. Add a table caption above the table, and
-a 1-2 sentence conclusion paragraph after. To submit Task 1, knit to
-HTML. Ensure that all messages, warnings are hidden but all attached
-packages are visible (setup chunk included). Code should be available if
-we click on the Code button (use code folding in your R Markdown YAML
-header). Upload your file to GauchoSpace.</li>
-</ol>
+classified as species A).</p>
+<pre class="r"><code>#use broom::augment() to find probabilities rather than log-odds
+fitted_final_mdl &lt;- final_mdl %&gt;% 
+  broom::augment(type.predict = &#39;response&#39;)
+
+# function to calculate percent accuracy 
+pred_acc &lt;- function(x, y){
+  accurate &lt;- ifelse(x == y, 1, 0)
+  return(mean(accurate, na.rm = TRUE)*100)
+}
+
+
+#use broom::augment() to find probabilities rather than log-odds
+final_mdl_acc &lt;- fitted_final_mdl %&gt;% 
+  #set up predict based on 50% cutoff 
+  mutate(species_pred = ifelse(.fitted &gt; 0.5, &quot;Serenoa repens&quot;, &quot;Sabal etonia&quot;)) %&gt;% 
+  #code to return a 1 if prediction was correct, otherwise 0
+  mutate(correct_pred = ifelse(species_pred == species, &quot;yes&quot;, &quot;no&quot;)) %&gt;% 
+  group_by(species) %&gt;% 
+  summarize(n_correct = sum (correct_pred == &quot;yes&quot;),
+            n_incorrect = sum(correct_pred == &quot;no&quot;),
+            pct_correct = pred_acc(species, species_pred))
+#make a nice table 
+final_mdl_acc %&gt;% 
+  kable(caption = &quot;Table 4: Accuracy of Final Model by Species&quot;,
+        col.names = c(&quot;Species&quot;,
+                      &quot;Number correctly classified&quot;,
+                      &quot;Number incorrectly classified&quot;,
+                      &quot;Percent correctly classified&quot;)) %&gt;% 
+  kable_styling(full_width = FALSE,
+                bootstrap_options = &quot;striped&quot;,
+                position = &quot;left&quot;)</code></pre>
+<table class="table table-striped" style="width: auto !important; ">
+<caption>
+Table 4: Accuracy of Final Model by Species
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Species
+</th>
+<th style="text-align:right;">
+Number correctly classified
+</th>
+<th style="text-align:right;">
+Number incorrectly classified
+</th>
+<th style="text-align:right;">
+Percent correctly classified
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Sabal etonia
+</td>
+<td style="text-align:right;">
+5701
+</td>
+<td style="text-align:right;">
+454
+</td>
+<td style="text-align:right;">
+92.62388
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Serenoa repens
+</td>
+<td style="text-align:right;">
+5548
+</td>
+<td style="text-align:right;">
+564
+</td>
+<td style="text-align:right;">
+90.77225
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 

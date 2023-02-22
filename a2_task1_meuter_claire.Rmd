@@ -102,7 +102,7 @@ green_lvs <- ggplot(data = palmetto, aes(x = green_lvs)) +
 
 ```
 
-Figure 1: Two scatterplots comparing the relationship between canopy height and width (left) and canopy height and length (right), between two palmetto species, *Sabel entonia* (red) and *Serenoa repens* (blue). A visual exploration of canopy height and width shows little variation between the *S. entonia* and *S. repens* species. A visual exploration of canopy height and length shows a slight variation between *S. entonia* and *S. repens* species, with *S. entonia* showing a slightly longer canopy length compared to *S. repens.* 
+Figure 1: Two scatterplots comparing the relationship between canopy height and width (left) and canopy height and length (right), between two palmetto species, *Sabel entonia* (dark blue) and *Serenoa repens* (light blue). A visual exploration of canopy height and width shows little variation between the *S. entonia* and *S. repens* species. A visual exploration of canopy height and length shows a slight variation between *S. entonia* and *S. repens* species, with *S. entonia* showing a slightly longer canopy length compared to *S. repens.* 
 ```{r}
 green_lvs
 ```
@@ -110,13 +110,11 @@ green_lvs
 Figure 2: A histogram displaying the number of green leaves on *S. etonia* and *S. repens.* *S. etonia* observations are colored dark blue, and *S. repens* observations are colored light blue. Where the count of green leaves between species overlaps, the graph is a combination blue color.  
 
 #### Takeaway from data exploration: 
-Based on Figures 1 and 2, I suspect that number of green leaves and canopy length will be the most important in determining if a plant is *S. etonia* or *S. repens.* Canopy width shows little variation between the two species, but it could still be a useful model parameter, which I will explore in the next section. 
+Based on Figures 1 and 2, it seems likely that number of green leaves and canopy length will be the most important in determining if a plant is *S. etonia* or *S. repens.* Canopy width shows little variation between the two species, but it could still be a useful model parameter, which will be explored in the next section. 
 
-c. A section in which you perform binary logistic regression to determine the probability of a plant being either Serenoa repens or Sabal etonia based on several predictor variables.  Perform the analysis twice, using cross validation to compare two models:
 
 ### Section C: Comparison of two binary logistic regression models to determine the probability of a plant being either Serenoa repens or Sabal etonia
 ```{r}
-
 #First, I create a formula for model 1 with variables plant height, canopy length, canopy width and green leaves
 f1 <- species ~ height + length + width + green_lvs
 #Next, a formula for model 2 with variables plant height, canopy width and green leaves
@@ -195,7 +193,7 @@ metrics_md2 %>%
 
 ```
 
-Comparing Tables 1 and 2, model 1 has a higher accuracy than model 2.
+Comparing Tables 1 and 2, Model 1 has a higher accuracy than Model 2. 
 
 ### Section D: Producing the final model
 ```{r}
@@ -219,8 +217,7 @@ final_mdl_outputs %>%
 
 
 ### Section E: Testing Accuracy of Model 1 
-e. A section that evaluates how successfully this model would “classify” a plant as the correct species, using a 50% cutoff (e.g. if the probability is >=50% that it is species A, then it would be classified as species A). Use broom::augment() to find the probabilities (instead of log-odds) for each plant in the original dataset, then add a column for which species your model would classify that plant as (using a 50% cutoff) based on the included predictor variables. The outcome should be a finalized table showing, for each species, how many plants in the original dataset would be correctly classified and how many were incorrectly classified by the model, as well as an additional column with “% correctly classified”. Add a table caption above the table, and a 1-2 sentence conclusion paragraph after.
-
+This section that evaluates how successfully this model would “classify” a plant as the correct species, using a 50% cutoff (e.g. if the probability is >=50% that it is species A, then it would be classified as species A).
 ```{r}
 #use broom::augment() to find probabilities rather than log-odds
 fitted_final_mdl <- final_mdl %>% 
@@ -255,10 +252,4 @@ final_mdl_acc %>%
                 position = "left")
 
 ```
-
-
-
-
-To submit Task 1, knit to HTML. Ensure that all messages, warnings are hidden but all attached packages are visible (setup chunk included). Code should be available if we click on the Code button (use code folding in your R Markdown YAML header). Upload your file to GauchoSpace.
-
 
